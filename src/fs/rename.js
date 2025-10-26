@@ -2,29 +2,35 @@ import { access, rename as fsRename } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
+const dirName = "files";
+const oldNameFile = "wrongFilename.txt";
+const newNameFile = "properFilename.md";
+const errorMessage = "FS operation failed";
+
+const fileExists = async (filePath) => {
+    try {
+        await access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 const rename = async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
 
-  const sourceFile = join(__dirname, "files", "wrongFilename.txt");
-  const renameFile = join(__dirname, "files", "properFilename.md");
+  const sourceFile = join(__dirname, dirName, oldNameFile);
+  const renameFile = join(__dirname, dirName, newNameFile);
 
-  try {
-    await access(sourceFile);
+    const sourceExists = await fileExists(sourceFile);
+    const targetExists = await fileExists(renameFile);
 
-    try {
-      await access(renameFile);
-      throw new Error("FS operation failed");
-    } catch (err) {
-      if (err.code !== "ENOENT") {
-        throw new Error("FS operation failed");
-      }
+    if (!sourceExists || targetExists) {
+        throw new Error(errorMessage);
     }
 
     await fsRename(sourceFile, renameFile);
-  } catch (err) {
-    throw new Error("FS operation failed");
-  }
 };
 
 await rename();
