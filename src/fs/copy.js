@@ -1,37 +1,25 @@
-import { copyFile, access, mkdir, readdir } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import fs from "node:fs/promises";
+
+const sourceDirName = "files";
+const copyDirName = "files_copy";
 
 const copy = async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
 
-  const sourceDir = join(__dirname, "files");
-  const copyDir = join(__dirname, "files_copy");
+  const sourceDir = join(__dirname, sourceDirName);
+  const copyDir = join(__dirname, copyDirName);
 
   try {
-    await access(sourceDir);
-
-    try {
-      await access(copyDir);
+      await fs.cp(sourceDir, copyDir, {
+          recursive: true,
+          errorOnExist: true,
+          force: false,
+      });
+  } catch {
       throw new Error("FS operation failed");
-    } catch (err) {
-      if (err.code !== "ENOENT") {
-        throw new Error("FS operation failed");
-      }
-    }
-
-    await mkdir(copyDir);
-
-    const files = await readdir(sourceDir);
-
-    for (const file of files) {
-      const srcPath = join(sourceDir, file);
-      const destPath = join(copyDir, file);
-      await copyFile(srcPath, destPath);
-    }
-  } catch (err) {
-    throw new Error("FS operation failed");
   }
 };
 
