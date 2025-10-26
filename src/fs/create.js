@@ -1,4 +1,4 @@
-import { writeFile, access } from "fs/promises";
+import { writeFile } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -10,14 +10,12 @@ const create = async () => {
   const content = "I am fresh and young";
 
   try {
-    await access(filePath);
-    throw new Error("FS operation failed");
+    await writeFile(filePath, content, {flag: "wx"});
   } catch (err) {
-    if (err.code === "ENOENT") {
-      await writeFile(filePath, content);
-    } else {
-      throw new Error("FS operation failed");
-    }
+      if (err && typeof err === "object" && "code" in err && err.code === "EEXIST") {
+          throw new Error("FS operation failed");
+      }
+      throw err;
   }
 };
 
